@@ -1,4 +1,7 @@
-import type { Order, MenuItem, SalesData, PeakHoursData, PopularItemData } from '@/types';
+import type { Order, OrderItem, MenuItem, SalesData, PeakHoursData, PopularItemData } from '@/types';
+
+// Helper to generate simple mock IDs
+export const generateMockId = () => `mock-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
 
 export const mockOrders: Order[] = [
   {
@@ -37,31 +40,6 @@ export const mockOrders: Order[] = [
     customerName: 'Carol Williams',
     timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(), // 5 minutes ago
     deliveryAddress: '123 Main St, Anytown, USA',
-  },
-  {
-    id: 'ORD004',
-    type: 'dine-in',
-    status: 'pending',
-    items: [
-      { id: 'MI006', name: 'Espresso', quantity: 2, price: 3.50 },
-    ],
-    total: 7.00,
-    customerName: 'David Brown',
-    timestamp: new Date().toISOString(),
-    tableNumber: '2B',
-  },
-    {
-    id: 'ORD005',
-    type: 'delivery',
-    status: 'completed',
-    items: [
-      { id: 'MI001', name: 'Classic Burger', quantity: 2, price: 12.99, modifiers: ['extra cheese'] },
-      { id: 'MI002', name: 'Veggie Pizza', quantity: 1, price: 15.50 },
-    ],
-    total: 41.48,
-    customerName: 'Eva Green',
-    timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
-    deliveryAddress: '456 Oak Ave, Anytown, USA',
   },
 ];
 
@@ -127,6 +105,27 @@ export const mockMenuItems: MenuItem[] = [
     ingredients: ['Coffee Beans', 'Water'],
   },
 ];
+
+// Functions to modify mock data (will cause re-render if page state depends on a key that changes)
+export const addMockMenuItem = (item: Omit<MenuItem, 'id'>) => {
+  const newItem: MenuItem = { ...item, id: generateMockId() };
+  mockMenuItems.unshift(newItem); // Add to the beginning of the array
+  return newItem;
+};
+
+export const addMockOrder = (orderData: Omit<Order, 'id' | 'timestamp' | 'total' | 'items'>, items: OrderItem[]) => {
+  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const newOrder: Order = {
+    ...orderData,
+    items,
+    id: generateMockId(),
+    timestamp: new Date().toISOString(),
+    total,
+  };
+  mockOrders.unshift(newOrder);
+  return newOrder;
+};
+
 
 export const mockSalesData: SalesData[] = [
   { month: 'Jan', sales: 12000 },

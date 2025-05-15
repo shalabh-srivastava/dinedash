@@ -1,21 +1,29 @@
+
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { MenuItemCard } from '@/components/menu-item-card';
-import { mockMenuItems } from '@/lib/mock-data';
+import { mockMenuItems, addMockMenuItem } from '@/lib/mock-data';
+import type { MenuItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PlusCircle, ListFilter } from 'lucide-react';
+import { AddMenuItemForm } from '@/components/add-menu-item-form';
+import { useAuth } from '@/contexts/auth-context';
 
 export default function MenuPage() {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  // Use a key to force re-render when mock data changes
+  const [dataVersion, setDataVersion] = useState(0);
 
   const categories = useMemo(() => {
     const allCategories = mockMenuItems.map(item => item.category);
     return ['all', ...Array.from(new Set(allCategories))];
-  }, []);
+  }, [dataVersion]); // Re-calculate if data changes
 
   const filteredMenuItems = useMemo(() => {
     return mockMenuItems.filter(item => {
@@ -25,17 +33,32 @@ export default function MenuPage() {
       const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
       return matchesSearch && matchesCategory;
     });
-  }, [searchTerm, selectedCategory]);
+  }, [searchTerm, selectedCategory, dataVersion]); // Re-filter if data changes
+
+  const handleAddNewItem = (item: Omit<MenuItem, 'id'>) => {
+    addMockMenuItem(item);
+    setDataVersion(prev => prev + 1); // Trigger re-render and re-calculation
+  };
 
   return (
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
         <h1 className="text-3xl font-bold tracking-tight">Menu Management</h1>
-        <Button>
-          <PlusCircle className="mr-2 h-5 w-5" />
-          Add New Item
-        </Button>
+        {user?.role === 'manager' && (
+          <Button onClick={() => setIsAddModalOpen(true)}>
+            <PlusCircle className="mr-2 h-5 w-5" />
+            Add New Item
+          </Button>
+        )}
       </div>
+
+      {user?.role === 'manager' && (
+        <AddMenuItemForm
+          open={isAddModalOpen}
+          onOpenChange={setIsAddModalOpen}
+          onAddItem={handleAddNewItem}
+        />
+      )}
 
       <div className="p-4 bg-card border rounded-lg shadow-sm">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

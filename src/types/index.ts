@@ -2,7 +2,7 @@ export type OrderType = "dine-in" | "takeaway" | "delivery";
 export type OrderStatus = "pending" | "preparing" | "completed" | "cancelled";
 
 export interface OrderItem {
-  id: string;
+  id: string; // Menu item ID
   name: string;
   quantity: number;
   price: number;
@@ -10,7 +10,7 @@ export interface OrderItem {
 }
 
 export interface Order {
-  id: string;
+  id: string; // Order ID
   type: OrderType;
   status: OrderStatus;
   items: OrderItem[];
@@ -28,7 +28,7 @@ export interface MenuItem {
   price: number;
   category: string;
   imageUrl?: string;
-  ingredients: string[]; // Simplified for now
+  ingredients: string[];
   dataAiHint?: string;
 }
 
@@ -45,4 +45,20 @@ export interface PeakHoursData {
 export interface PopularItemData {
   name: string;
   orders: number;
+}
+
+// --- Auth Types ---
+export type UserRole = "manager" | "customer";
+
+export interface User {
+  id: string;
+  name: string;
+  role: UserRole;
+}
+
+export interface AuthContextType {
+  user: User | null;
+  isLoading: boolean;
+  login: (role: UserRole, name?: string) => void;
+  logout: () => void;
 }

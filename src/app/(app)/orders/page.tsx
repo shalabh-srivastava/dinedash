@@ -1,19 +1,27 @@
+
 "use client";
 
 import { useState, useMemo } from 'react';
 import { OrderCard } from '@/components/order-card';
 import { AISuggestions } from '@/components/ai-suggestions';
-import { mockOrders } from '@/lib/mock-data';
-import type { Order, OrderStatus, OrderType } from '@/types';
+import { mockOrders, addMockOrder } from '@/lib/mock-data';
+import type { Order, OrderStatus, OrderType, OrderItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { PlusCircle, ListFilter } from 'lucide-react';
+import { CreateOrderForm } from '@/components/create-order-form';
+import { useAuth } from '@/contexts/auth-context';
 
 export default function OrdersPage() {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<OrderType | 'all'>('all');
   const [selectedStatus, setSelectedStatus] = useState<OrderStatus | 'all'>('all');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  // Use a key to force re-render when mock data changes
+  const [dataVersion, setDataVersion] = useState(0);
+
 
   const filteredOrders = useMemo(() => {
     return mockOrders.filter(order => {
@@ -25,17 +33,35 @@ export default function OrdersPage() {
       const matchesStatus = selectedStatus === 'all' || order.status === selectedStatus;
       return matchesSearch && matchesType && matchesStatus;
     });
-  }, [searchTerm, selectedType, selectedStatus]);
+  }, [searchTerm, selectedType, selectedStatus, dataVersion]); // Re-filter if data changes
+
+  const handleCreateNewOrder = (
+    orderData: Omit<Order, 'id' | 'timestamp' | 'total' | 'items'>, 
+    items: OrderItem[]
+  ) => {
+    addMockOrder(orderData, items);
+    setDataVersion(prev => prev + 1); // Trigger re-render
+  };
 
   return (
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
         <h1 className="text-3xl font-bold tracking-tight">Order Management</h1>
-        <Button>
-          <PlusCircle className="mr-2 h-5 w-5" />
-          Create New Order
-        </Button>
+        {user?.role === 'manager' && (
+          <Button onClick={() => setIsCreateModalOpen(true)}>
+            <PlusCircle className="mr-2 h-5 w-5" />
+            Create New Order
+          </Button>
+        )}
       </div>
+
+      {user?.role === 'manager' && (
+        <CreateOrderForm
+          open={isCreateModalOpen}
+          onOpenChange={setIsCreateModalOpen}
+          onAddOrder={handleCreateNewOrder}
+        />
+      )}
 
       <div className="p-4 bg-card border rounded-lg shadow-sm">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -83,9 +109,11 @@ export default function OrdersPage() {
         <p className="text-center text-muted-foreground py-8">No orders found matching your criteria.</p>
       )}
 
-      <div className="mt-12">
-        <AISuggestions />
-      </div>
+      {user?.role === 'manager' && (
+        <div className="mt-12">
+          <AISuggestions />
+        </div>
+      )}
     </div>
   );
 }
