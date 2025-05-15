@@ -1,7 +1,21 @@
 import {genkit} from 'genkit';
-import {googleAI} from '@genkit-ai/googleai';
+import {config} from 'dotenv';
+
+config(); // Ensure environment variables are loaded
 
 export const ai = genkit({
-  plugins: [googleAI()],
-  model: 'googleai/gemini-2.0-flash',
+  plugins: [
+    // No AI provider plugin configured, AI calls will need to be mocked or will fail
+    // If you resolve npm issues, you can add a plugin here:
+    // e.g., mistralai({apiKey: process.env.MISTRAL_API_KEY}),
+  ],
+  // No default model specified as no plugin is active
+  telemetry: {
+    instrumentation: {
+      llm: true,
+    },
+    logger: {
+      level: 'debug', // Set to 'info' or 'warn' for less verbose logging
+    },
+  },
 });

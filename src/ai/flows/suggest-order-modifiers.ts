@@ -3,6 +3,7 @@
 
 /**
  * @fileOverview AI-powered suggestions for order modifiers based on history and preferences.
+ * Currently uses MOCK data due to issues with AI provider integration.
  *
  * - suggestOrderModifiers - A function that suggests order modifiers.
  * - SuggestOrderModifiersInput - The input type for the suggestOrderModifiers function.
@@ -43,8 +44,36 @@ export type SuggestOrderModifiersOutput = z.infer<
 export async function suggestOrderModifiers(
   input: SuggestOrderModifiersInput
 ): Promise<SuggestOrderModifiersOutput> {
-  return suggestOrderModifiersFlow(input);
+  // Using MOCK AI suggestions
+  console.log("Using MOCK AI suggestions for input:", input);
+  
+  const mockSuggestions: string[] = [];
+  if (input.menuItem.toLowerCase().includes("burger")) {
+    mockSuggestions.push("extra pickles");
+    mockSuggestions.push("no onions");
+    mockSuggestions.push("add bacon");
+  } else if (input.menuItem.toLowerCase().includes("pizza")) {
+    mockSuggestions.push("extra cheese");
+    mockSuggestions.push("thin crust");
+    mockSuggestions.push("add pepperoni");
+  } else if (input.menuItem.toLowerCase().includes("salad")) {
+    mockSuggestions.push("dressing on the side");
+    mockSuggestions.push("add avocado");
+  } else {
+    mockSuggestions.push("add a side of fries");
+    mockSuggestions.push("make it spicy");
+  }
+  
+  // Simulate an asynchronous operation
+  await new Promise(resolve => setTimeout(resolve, 50)); 
+  
+  return { suggestedModifiers: mockSuggestions };
 }
+
+/*
+// Original AI-powered flow (commented out):
+// If you configure an AI provider in src/ai/genkit.ts, you can uncomment this section
+// and remove or comment out the mock implementation above.
 
 const prompt = ai.definePrompt({
   name: 'suggestOrderModifiersPrompt',
@@ -56,7 +85,7 @@ const prompt = ai.definePrompt({
   Customer Preferences: {{{customerPreferences}}}
   Menu Item: {{{menuItem}}}
 
-  Suggest relevant modifiers (e.g., "no onions", "extra cheese") based on the order history and customer preferences.  Return them as an array of strings.`,
+  Suggest relevant modifiers (e.g., "no onions", "extra cheese") based on the order history and customer preferences. Return them as an array of strings.`,
 });
 
 const suggestOrderModifiersFlow = ai.defineFlow(
@@ -66,42 +95,20 @@ const suggestOrderModifiersFlow = ai.defineFlow(
     outputSchema: SuggestOrderModifiersOutputSchema,
   },
   async (input): Promise<SuggestOrderModifiersOutput> => {
-    // MODIFICATION START: Return mocked suggestions to avoid API key requirement.
-    // This makes the feature "free" by not calling a paid AI service.
-    // To re-enable actual AI suggestions (if you have an API key like GOOGLE_API_KEY):
-    // 1. Comment out or remove the 'mockedResponse' block below.
-    // 2. Uncomment the 'Actual AI call' block further down.
-    // 3. Ensure your API key is correctly set up (e.g., in a .env file).
-
-    const mockedResponse: SuggestOrderModifiersOutput = {
-      suggestedModifiers: [
-        `Consider "extra cheese" for ${input.menuItem} (mocked suggestion)`,
-        `How about "no onions" for ${input.menuItem}? (mocked suggestion)`,
-        `Try ${input.menuItem} with "spicy sauce" (mocked suggestion)`,
-      ],
-    };
-    // console.log(`AI Flow: Returning mocked suggestions for menuItem "${input.menuItem}"`);
-    return mockedResponse;
-
-    /*
-    // == Actual AI call (Commented out for free/mocked version) ==
-    // Uncomment this block and remove/comment the 'mockedResponse' block above
-    // to use real AI suggestions.
-
-    console.log(`AI Flow: Calling actual AI prompt for menuItem "${input.menuItem}"`);
     const {output} = await prompt(input);
 
     if (!output) {
-      // This case should ideally be handled by Genkit if the prompt fails or the model doesn't comply.
-      // For robustness, you might want to ensure output is always valid or throw/handle an error.
       console.error("AI prompt did not return an output for input:", input);
-      // Returning empty suggestions as a fallback.
-      // Consider if throwing an error or a more specific message is appropriate for your app.
       return { suggestedModifiers: [] };
     }
     return output;
-    // == End of Actual AI call block ==
-    */
-    // MODIFICATION END
   }
 );
+
+// To use the original flow, you would change the export above to:
+// export async function suggestOrderModifiers(
+//   input: SuggestOrderModifiersInput
+// ): Promise<SuggestOrderModifiersOutput> {
+//   return suggestOrderModifiersFlow(input);
+// }
+*/
