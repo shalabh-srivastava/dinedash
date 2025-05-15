@@ -1,4 +1,8 @@
+
+"use client";
+
 import type { ReactNode } from 'react';
+import { useState, useEffect } from 'react';
 import {
   SidebarProvider,
   Sidebar,
@@ -18,6 +22,12 @@ const navItems: NavItem[] = [
 ];
 
 export default function AppLayout({ children }: { children: ReactNode }) {
+  const [currentYear, setCurrentYear] = useState<number | null>(null);
+
+  useEffect(() => {
+    setCurrentYear(new Date().getFullYear());
+  }, []);
+
   return (
     <SidebarProvider defaultOpen>
       <Sidebar variant="sidebar" collapsible="icon">
@@ -34,7 +44,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         </SidebarContent>
         <SidebarFooter className="p-4 mt-auto">
            <div className="text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
-            © {new Date().getFullYear()} DineDash RMS
+            {currentYear !== null ? `© ${currentYear} DineDash RMS` : '© DineDash RMS'}
           </div>
         </SidebarFooter>
       </Sidebar>
