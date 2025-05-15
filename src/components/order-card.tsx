@@ -1,7 +1,8 @@
+
 import type { Order, OrderStatus, OrderType } from '@/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Utensils, Package, Truck, Clock3, ChefHat, CheckCircle2, XCircle, DollarSign, Hash, CalendarDays, User } from 'lucide-react';
+import { Utensils, Package, Truck, Clock3, ChefHat, CheckCircle2, XCircle, Hash, CalendarDays, User } from 'lucide-react'; // Removed DollarSign
 import { format } from 'date-fns';
 
 interface OrderCardProps {
@@ -60,7 +61,7 @@ export function OrderCard({ order }: OrderCardProps) {
           {order.items.map((item) => (
             <div key={item.id} className="flex justify-between items-center text-sm">
               <span>{item.name} (x{item.quantity})</span>
-              <span>${(item.price * item.quantity).toFixed(2)}</span>
+              <span>₹{(item.price * item.quantity).toFixed(2)}</span>
             </div>
           ))}
            {order.items.some(item => item.modifiers && item.modifiers.length > 0) && (
@@ -84,9 +85,8 @@ export function OrderCard({ order }: OrderCardProps) {
             <CalendarDays className="h-4 w-4 mr-1" />
             {format(new Date(order.timestamp), "PPp")}
         </div>
-        <div className="flex items-center text-lg font-bold text-primary">
-            <DollarSign className="h-5 w-5 mr-1" />
-            {order.total.toFixed(2)}
+        <div className="text-lg font-bold text-primary">
+            ₹{order.total.toFixed(2)}
         </div>
       </CardFooter>
     </Card>

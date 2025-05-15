@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { UtensilsCrossed, UserCog, Users } from "lucide-react";
+import { UtensilsCrossed, UserCog } from "lucide-react";
 
 export default function LoginPage() {
   const { login, user, isLoading } = useAuth();
@@ -31,7 +31,7 @@ export default function LoginPage() {
             <UtensilsCrossed className="h-12 w-12 text-primary" />
           </div>
           <CardTitle className="text-3xl font-bold">Welcome to DineDash RMS</CardTitle>
-          <CardDescription>Please select your role to continue.</CardDescription>
+          <CardDescription>Restaurant Management System Login</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <Button
@@ -41,15 +41,6 @@ export default function LoginPage() {
           >
             <UserCog className="mr-2 h-6 w-6" />
             Login as Manager
-          </Button>
-          <Button
-            onClick={() => login("customer", "Valued Customer")}
-            variant="secondary"
-            className="w-full text-lg py-6"
-            size="lg"
-          >
-            <Users className="mr-2 h-6 w-6" />
-            Login as Customer
           </Button>
         </CardContent>
         <CardFooter>

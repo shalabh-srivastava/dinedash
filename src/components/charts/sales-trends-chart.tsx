@@ -1,3 +1,4 @@
+
 "use client"
 
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts"
@@ -13,21 +14,22 @@ export function SalesTrendsChart({ data }: SalesTrendsChartProps) {
     <Card className="shadow-lg">
       <CardHeader>
         <CardTitle>Sales Trends</CardTitle>
-        <CardDescription>Monthly sales performance.</CardDescription>
+        <CardDescription>Monthly sales performance (in INR).</CardDescription>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={350}>
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis dataKey="month" stroke="hsl(var(--foreground))" fontSize={12} tickLine={false} axisLine={false} />
-            <YAxis stroke="hsl(var(--foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value/1000}k`} />
+            <YAxis stroke="hsl(var(--foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `₹${value/1000}k`} />
             <Tooltip 
               contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: 'var(--radius)'}} 
               labelStyle={{ color: 'hsl(var(--foreground))' }}
               itemStyle={{ color: 'hsl(var(--foreground))' }}
+              formatter={(value: number) => [`₹${value.toLocaleString()}`, "Sales"]}
             />
             <Legend wrapperStyle={{ color: 'hsl(var(--foreground))' }} />
-            <Bar dataKey="sales" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Sales ($)" />
+            <Bar dataKey="sales" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Sales (₹)" />
           </BarChart>
         </ResponsiveContainer>
       </CardContent>

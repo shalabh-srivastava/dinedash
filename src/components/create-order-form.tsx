@@ -115,7 +115,7 @@ export function CreateOrderForm({ onAddOrder, open, onOpenChange }: CreateOrderF
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Customer Name</FormLabel>
-                  <FormControl><Input placeholder="e.g., John Doe" {...field} /></FormControl>
+                  <FormControl><Input placeholder="e.g., Priya Sharma" {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -167,7 +167,7 @@ export function CreateOrderForm({ onAddOrder, open, onOpenChange }: CreateOrderF
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Table Number</FormLabel>
-                    <FormControl><Input placeholder="e.g., 5A" {...field} /></FormControl>
+                    <FormControl><Input placeholder="e.g., 5" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -180,7 +180,7 @@ export function CreateOrderForm({ onAddOrder, open, onOpenChange }: CreateOrderF
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Delivery Address</FormLabel>
-                    <FormControl><Input placeholder="e.g., 123 Main St, Anytown" {...field} /></FormControl>
+                    <FormControl><Input placeholder="e.g., 15B, Hazratganj, Lucknow" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -206,7 +206,7 @@ export function CreateOrderForm({ onAddOrder, open, onOpenChange }: CreateOrderF
                           <FormControl><SelectTrigger><SelectValue placeholder="Select menu item" /></SelectTrigger></FormControl>
                           <SelectContent>
                             {mockMenuItems.map(menuItem => (
-                              <SelectItem key={menuItem.id} value={menuItem.id}>{menuItem.name} - ${menuItem.price.toFixed(2)}</SelectItem>
+                              <SelectItem key={menuItem.id} value={menuItem.id}>{menuItem.name} - ₹{menuItem.price.toFixed(2)}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>

@@ -1,8 +1,9 @@
+
 import type { MenuItem } from '@/types';
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { DollarSign, List } from 'lucide-react';
+import { List } from 'lucide-react'; // Removed DollarSign, will use text symbol
 
 interface MenuItemCardProps {
   menuItem: MenuItem;
@@ -27,9 +28,8 @@ export function MenuItemCard({ menuItem }: MenuItemCardProps) {
         <CardDescription>{menuItem.description}</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow">
-        <div className="flex items-center text-primary font-semibold text-lg mb-2">
-          <DollarSign className="h-5 w-5 mr-1" />
-          {menuItem.price.toFixed(2)}
+        <div className="text-primary font-semibold text-lg mb-2">
+          ₹{menuItem.price.toFixed(2)}
         </div>
         <Badge variant="secondary" className="capitalize mb-3">{menuItem.category}</Badge>
         
