@@ -13,17 +13,7 @@ export function MenuItemCard({ menuItem }: MenuItemCardProps) {
   return (
     <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
       <CardHeader>
-        {menuItem.imageUrl && (
-          <div className="relative h-48 w-full mb-4 rounded-t-lg overflow-hidden">
-            <Image
-              src={menuItem.imageUrl}
-              alt={menuItem.name}
-              fill
-              style={{ objectFit: 'cover' }}
-              data-ai-hint={menuItem.dataAiHint || "food item"}
-            />
-          </div>
-        )}
+        {/* Image section removed */}
         <CardTitle className="text-lg font-semibold">{menuItem.name}</CardTitle>
         <CardDescription>{menuItem.description}</CardDescription>
       </CardHeader>
