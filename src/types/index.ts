@@ -1,3 +1,4 @@
+
 export type OrderType = "dine-in" | "takeaway" | "delivery";
 export type OrderStatus = "pending" | "preparing" | "completed" | "cancelled";
 
@@ -48,10 +49,11 @@ export interface PopularItemData {
 }
 
 // --- Auth Types ---
-export type UserRole = "manager" | "customer";
+export type UserRole = "manager"; // Only manager role for now
 
 export interface User {
   id: string;
+  email: string;
   name: string;
   role: UserRole;
 }
@@ -59,6 +61,19 @@ export interface User {
 export interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (role: UserRole, name?: string) => void;
-  logout: () => void;
+  login: (formData: FormData) => Promise<{ type: string; message: string; user?: User; errors?:any }>;
+  logout: () => Promise<void>;
+  signup: (formData: FormData) => Promise<{ type: string; message: string; user?: User; errors?:any }>;
+  fetchCurrentUser: () => Promise<void>;
+}
+
+// --- Feedback Types ---
+export interface Feedback {
+  id: string;
+  fullName: string;
+  address?: string;
+  phoneNumber?: string;
+  menuItems?: string[]; // Names or IDs of menu items
+  feedbackText: string;
+  submittedAt: string; // ISO string
 }

@@ -16,11 +16,12 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { SidebarNav, type NavItem } from '@/components/sidebar-nav';
-import { ClipboardList, BookOpenText, LineChart, UtensilsCrossed, LogOut, UserCircle } from 'lucide-react';
+import { ClipboardList, BookOpenText, LineChart, UtensilsCrossed, LogOut, UserCircle, MessageSquareText } from 'lucide-react';
 
 const baseNavItems: NavItem[] = [
   { href: '/orders', label: 'Orders', icon: ClipboardList, matchExact: true },
   { href: '/menu', label: 'Menu', icon: BookOpenText, matchExact: true },
+  { href: '/feedback', label: 'Feedback', icon: MessageSquareText, matchExact: true },
 ];
 
 const managerNavItems: NavItem[] = [
@@ -30,7 +31,7 @@ const managerNavItems: NavItem[] = [
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const [currentYear, setCurrentYear] = useState<number | null>(null);
-  const { user, isLoading, logout, login } = useAuth(); // Added login for potential auto-login if token existed
+  const { user, isLoading, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -39,7 +40,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!isLoading && !user && pathname !== '/login') {
+    if (!isLoading && !user && pathname !== '/login' && pathname !== '/signup') {
       router.push('/login');
     }
   }, [isLoading, user, router, pathname]);
@@ -48,16 +49,11 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     return <div className="flex items-center justify-center min-h-screen">Loading Dashboard...</div>;
   }
   
-  if (!user && pathname !== '/login') {
-     // This case should ideally be handled by the useEffect redirect,
-     // but as a fallback or if routing is slow:
+  if (!user && pathname !== '/login' && pathname !== '/signup') {
     return <div className="flex items-center justify-center min-h-screen">Redirecting to login...</div>;
   }
-  
-  // If !user and on /login, login page handles itself.
-  // If user exists, proceed to render layout.
 
-  const navItems = user?.role === 'manager' ? managerNavItems : baseNavItems;
+  const navItems = user?.role === 'manager' ? managerNavItems : baseNavItems; // Keeps analytics for manager
 
   return (
     <SidebarProvider defaultOpen>
