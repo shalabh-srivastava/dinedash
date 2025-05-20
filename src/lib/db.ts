@@ -5,6 +5,7 @@
 import sqlite3 from 'sqlite3';
 import { open, type Database } from 'sqlite';
 import path from 'path';
+import bcrypt from 'bcryptjs';
 
 // Singleton instance of the database
 let db: Database | null = null;
@@ -41,6 +42,25 @@ async function initializeDbSchema(dbInstance: Database) {
   `);
   console.log('Users table checked/created.');
 
+  // Add default manager user if not exists
+  const defaultManagerEmail = 'manager@email.com';
+  const existingManager = await dbInstance.get('SELECT * FROM users WHERE email = ?', defaultManagerEmail);
+  if (!existingManager) {
+    const defaultPassword = 'password';
+    const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+    await dbInstance.run(
+      'INSERT INTO users (email, password_hash, name, role) VALUES (?, ?, ?, ?)',
+      defaultManagerEmail,
+      hashedPassword,
+      'Default Manager',
+      'manager'
+    );
+    console.log(`Default manager user (${defaultManagerEmail}) created.`);
+  } else {
+    console.log(`Default manager user (${defaultManagerEmail}) already exists.`);
+  }
+
+
   await dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS feedback (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -64,3 +84,4 @@ async function initializeDbSchema(dbInstance: Database) {
 //   }
 //   process.exit(0);
 // });
+
