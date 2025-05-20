@@ -58,12 +58,29 @@ export interface User {
   role: UserRole;
 }
 
+// This type is for the state managed by useActionState
+export type AuthActionState = {
+  type: 'success' | 'error' | '';
+  message: string;
+  errors?: {
+    email?: string[];
+    password?: string[];
+    name?: string[];
+    general?: string[];
+  };
+  user?: User; // Add user here for server action return
+};
+
+
 export interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (formData: FormData) => Promise<{ type: string; message: string; user?: User; errors?:any }>;
+  // login and signup are now primarily handled by server actions and useActionState
+  // The context might not need to expose these directly if forms use server actions.
+  // However, fetchCurrentUser and logout are still very relevant.
+  // login: (formData: FormData) => Promise<AuthActionState>; // Kept for potential direct calls if needed
   logout: () => Promise<void>;
-  signup: (formData: FormData) => Promise<{ type: string; message: string; user?: User; errors?:any }>;
+  // signup: (formData: FormData) => Promise<AuthActionState>; // Kept for potential direct calls
   fetchCurrentUser: () => Promise<void>;
 }
 

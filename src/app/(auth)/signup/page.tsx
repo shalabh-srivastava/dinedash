@@ -1,8 +1,7 @@
 
 "use client";
 
-import { useActionState, useEffect } from "react"; // Changed import
-import { useFormStatus } from "react-dom";
+import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signupUser } from "@/actions/auth";
@@ -15,34 +14,30 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
 
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" className="w-full" disabled={pending}>
-      {pending ? <LogIn className="mr-2 h-4 w-4 animate-spin" /> : <UserPlus className="mr-2 h-5 w-5" />}
-      Sign Up
-    </Button>
-  );
-}
-
 export default function SignupPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, fetchCurrentUser } = useAuth();
 
-  const initialState = { message: '', type: '', errors: {} };
-  // Changed useFormState to useActionState
+  const initialState = { message: '', type: '', errors: {} as any, user: undefined };
   const [state, formAction, isPending] = useActionState(signupUser, initialState);
 
   useEffect(() => {
+    // If user is already loaded and present (e.g., navigating back to /signup), redirect
     if (!authLoading && user) {
-      router.push("/orders"); // Redirect if already logged in
+      router.push("/orders");
     }
   }, [user, authLoading, router]);
 
   useEffect(() => {
-    if (state.type === 'success') {
-      // AuthProvider will handle toast and redirect
+    if (state.type === 'success' && state.user) {
+      toast({
+        title: "Signup Successful",
+        description: state.message || "Refreshing session...",
+      });
+      // Prompt AuthProvider to recognize the new session
+      fetchCurrentUser();
+      // AuthProvider's useEffect will handle redirecting from /signup to /orders
     } else if (state.type === 'error' && state.message) {
       toast({
         title: "Signup Failed",
@@ -50,9 +45,9 @@ export default function SignupPage() {
         variant: "destructive",
       });
     }
-  }, [state, toast, router]);
+  }, [state, toast, fetchCurrentUser]); // fetchCurrentUser added
 
-  if (authLoading || user) {
+  if (authLoading || user) { // If auth is still loading or user exists, show loading
     return <div className="flex items-center justify-center min-h-screen bg-background">Loading...</div>;
   }
 

@@ -1,8 +1,7 @@
 
 "use client";
 
-import { useActionState, useEffect } from "react"; // Changed import
-import { useFormStatus } from "react-dom";
+import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { loginUser } from "@/actions/auth";
@@ -10,39 +9,36 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UtensilsCrossed, LogIn } from "lucide-react"; // Removed UserPlus as it's not used here
+import { UtensilsCrossed, LogIn } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" className="w-full" disabled={pending}>
-      {pending ? <LogIn className="mr-2 h-4 w-4 animate-spin" /> : <LogIn className="mr-2 h-5 w-5" />}
-      Log In
-    </Button>
-  );
-}
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, fetchCurrentUser } = useAuth();
 
-  const initialState = { message: '', type: '', errors: {} };
-  // Changed useFormState to useActionState
+  const initialState = { message: '', type: '', errors: {} as any, user: undefined };
   const [state, formAction, isPending] = useActionState(loginUser, initialState);
 
 
   useEffect(() => {
+    // If user is already loaded and present (e.g., navigating back to /login), redirect
     if (!authLoading && user) {
-      router.push("/orders"); // Redirect if already logged in
+      router.push("/orders");
     }
   }, [user, authLoading, router]);
 
   useEffect(() => {
-    if (state.type === 'success') {
-      // AuthProvider handles toast & redirect
+    if (state.type === 'success' && state.user) {
+      toast({
+        title: "Login Successful",
+        description: state.message || "Refreshing session...",
+      });
+      // Prompt AuthProvider to recognize the new session
+      fetchCurrentUser();
+      // AuthProvider's useEffect will handle redirecting from /login to /orders
     } else if (state.type === 'error' && state.message) {
       toast({
         title: "Login Failed",
@@ -50,9 +46,9 @@ export default function LoginPage() {
         variant: "destructive",
       });
     }
-  }, [state, toast, router]);
+  }, [state, toast, fetchCurrentUser]); // fetchCurrentUser added
 
-  if (authLoading || user) {
+  if (authLoading || user) { // If auth is still loading or user exists, show loading to prevent flash of login page
     return <div className="flex items-center justify-center min-h-screen bg-background">Loading...</div>;
   }
   
