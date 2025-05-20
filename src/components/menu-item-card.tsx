@@ -3,7 +3,7 @@ import type { MenuItem } from '@/types';
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { List } from 'lucide-react'; // Removed DollarSign, will use text symbol
+import { List } from 'lucide-react';
 
 interface MenuItemCardProps {
   menuItem: MenuItem;
@@ -11,9 +11,22 @@ interface MenuItemCardProps {
 
 export function MenuItemCard({ menuItem }: MenuItemCardProps) {
   return (
-    <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
-      <CardHeader>
-        {/* Image section removed */}
+    <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full overflow-hidden">
+      {menuItem.imageUrl && (
+        <div className="relative h-48 w-full">
+          <Image
+            src={menuItem.imageUrl}
+            alt={menuItem.name}
+            fill
+            className="object-cover"
+            // The data-ai-hint is part of the MenuItem type for data modeling.
+            // For next/image with a direct Unsplash URL, it's not actively used for generation.
+            // It would be used if we were generating placeholders via placehold.co.
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" // Basic responsive sizes
+          />
+        </div>
+      )}
+      <CardHeader className={menuItem.imageUrl ? "pt-4" : ""}>
         <CardTitle className="text-lg font-semibold">{menuItem.name}</CardTitle>
         <CardDescription>{menuItem.description}</CardDescription>
       </CardHeader>

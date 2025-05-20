@@ -41,7 +41,7 @@ export const mockMenuItems: MenuItem[] = [
     description: 'Whole wheat bread baked in a tandoor.',
     price: 25,
     category: 'Breads',
-    imageUrl: 'https://source.unsplash.com/600x400/?tandoori%20roti',
+    imageUrl: 'https://www.kingarthurbaking.com/sites/default/files/styles/featured_image/public/2021-02/naan-3.jpg?itok=xPP3zs5s',
     dataAiHint: 'indian bread',
     ingredients: ['Whole Wheat Flour', 'Water', 'Yogurt'],
   },
