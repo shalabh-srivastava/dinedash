@@ -1,25 +1,16 @@
 
 'use server';
 
-import { z } from 'zod';
 import { getDb } from '@/lib/db';
-
-export const feedbackSchema = z.object({
-  fullName: z.string().min(2, { message: 'Full name must be at least 2 characters.' }),
-  address: z.string().optional(),
-  phoneNumber: z.string().optional(),
-  menuItems: z.array(z.string()).optional(), // Array of menu item IDs/names
-  feedbackText: z.string().min(10, { message: 'Feedback must be at least 10 characters.' }),
-});
-
-export type FeedbackFormData = z.infer<typeof feedbackSchema>;
+import type { FeedbackFormData } from '@/lib/schemas'; // Updated import
+import { feedbackSchema } from '@/lib/schemas'; // Updated import
 
 export async function submitFeedback(prevState: any, formData: FeedbackFormData) {
   const validatedFields = feedbackSchema.safeParse(formData);
 
   if (!validatedFields.success) {
     return {
-      type: 'error',
+      type: 'error' as const, // Ensure 'error' is a literal type
       errors: validatedFields.error.flatten().fieldErrors,
       message: 'Invalid form data.',
     };
@@ -39,12 +30,12 @@ export async function submitFeedback(prevState: any, formData: FeedbackFormData)
     );
 
     if (result.lastID) {
-      return { type: 'success', message: 'Feedback submitted successfully! Thank you.' };
+      return { type: 'success' as const, message: 'Feedback submitted successfully! Thank you.' };
     } else {
-      return { type: 'error', message: 'Failed to submit feedback. Please try again.' };
+      return { type: 'error' as const, message: 'Failed to submit feedback. Please try again.' };
     }
   } catch (error) {
     console.error('Feedback submission error:', error);
-    return { type: 'error', message: 'An unexpected error occurred.' };
+    return { type: 'error' as const, message: 'An unexpected error occurred.' };
   }
 }

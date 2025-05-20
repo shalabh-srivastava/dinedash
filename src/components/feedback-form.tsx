@@ -3,9 +3,10 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { useActionState, useEffect } from "react"; // Changed import
+import { useActionState, useEffect } from "react";
 import { useFormStatus } from "react-dom";
-import { feedbackSchema, submitFeedback, type FeedbackFormData } from "@/actions/feedback";
+import { submitFeedback } from "@/actions/feedback";
+import { feedbackSchema, type FeedbackFormData } from "@/lib/schemas"; // Updated import
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -18,11 +19,12 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox"; // For multi-select items
-import { mockMenuItems } from "@/lib/mock-data"; // To populate menu item selection
+import { Checkbox } from "@/components/ui/checkbox";
+import { mockMenuItems } from "@/lib/mock-data";
 import { useToast } from "@/hooks/use-toast";
 import { Send, Loader2 } from "lucide-react";
 
+// SubmitButton remains the same
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
@@ -47,7 +49,6 @@ export function FeedbackForm() {
     },
   });
 
-  // Changed useFormState to useActionState
   const [state, formAction, isPending] = useActionState(submitFeedback, { type: "", message: "", errors: {} });
 
   useEffect(() => {
@@ -56,25 +57,28 @@ export function FeedbackForm() {
       form.reset();
     } else if (state.type === 'error' && state.message) {
       toast({ title: "Submission Failed", description: state.message, variant: "destructive" });
+      // Optionally set form errors if they exist in state.errors
+      if (state.errors) {
+        Object.entries(state.errors).forEach(([fieldName, fieldErrors]) => {
+          if (fieldErrors && fieldErrors.length > 0) {
+            form.setError(fieldName as keyof FeedbackFormData, { type: 'server', message: fieldErrors.join(', ') });
+          }
+        });
+      }
     }
   }, [state, toast, form]);
 
   const handleSubmit = async () => {
     const formData = form.getValues();
-    // The useActionState hook now expects the action to be called directly,
-    // not through `formAction(formData)` when used with react-hook-form this way.
-    // Instead, the form's `action` prop or a direct call to `formAction` when submitting
-    // the form element itself is the intended pattern.
-    // For this setup where we manually call and pass structured data,
-    // we'll call `formAction` with the data.
-    // Note: The `isPending` from `useActionState` should be used to disable the submit button.
+    // Directly call the action function. react-hook-form's onSubmit handles calling this.
+    // The `formAction` here is the function to be executed by the form.
+    // No need to pass prevState manually when using form.handleSubmit with useActionState's action.
     await (formAction as (payload: FeedbackFormData) => void)(formData);
   };
 
 
   return (
     <Form {...form}>
-      {/* We are not using the native form element's action here, but react-hook-form's onSubmit */}
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
         <FormField
           control={form.control}
@@ -188,8 +192,6 @@ export function FeedbackForm() {
         />
         
         <div className="flex justify-end">
-            {/* The SubmitButton component uses useFormStatus, which is correct. 
-                The `isPending` from `useActionState` is used to disable this button. */}
             <Button type="submit" disabled={isPending} className="w-full sm:w-auto">
               {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
               Submit Feedback
