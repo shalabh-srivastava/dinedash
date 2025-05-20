@@ -1,78 +1,98 @@
 
 "use client";
 
-import type { User, AuthContextType, AuthActionState } from '@/types'; // AuthActionState might be simplified
+import type { User, AuthContextType } from '@/types';
 import React, { createContext, useContext, useState, useEffect, type ReactNode, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { loginUser, logoutUser, getCurrentUser } from '@/actions/auth'; // signupUser removed
+import { logoutUser as serverLogoutUser } from '@/actions/auth'; // For server-side cookie clearing
 import { useToast } from '@/hooks/use-toast';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const LOCAL_STORAGE_USER_KEY = 'dinedash_user';
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true); // Start as true
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
   const { toast } = useToast();
 
   const fetchCurrentUserCallback = useCallback(async () => {
-    // console.log("AuthContext: fetchCurrentUserCallback called");
     setIsLoading(true);
     try {
-      const currentUser = await getCurrentUser();
-      // console.log("AuthContext: currentUser from getCurrentUser:", currentUser);
-      setUser(currentUser);
+      const storedUser = localStorage.getItem(LOCAL_STORAGE_USER_KEY);
+      if (storedUser) {
+        const parsedUser: User = JSON.parse(storedUser);
+        // Basic validation, e.g. check if it has a role property
+        if (parsedUser && parsedUser.role === 'manager') {
+            setUser(parsedUser);
+        } else {
+            localStorage.removeItem(LOCAL_STORAGE_USER_KEY); // Clear invalid stored user
+            setUser(null);
+        }
+      } else {
+        setUser(null);
+      }
     } catch (error) {
-      console.error("Error fetching current user:", error);
+      console.error("Error fetching current user from localStorage:", error);
       setUser(null);
+      localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
     } finally {
       setIsLoading(false);
-      // console.log("AuthContext: fetchCurrentUserCallback finished, isLoading:", false);
     }
   }, []);
 
   useEffect(() => {
-    // console.log("AuthContext: Initial fetchCurrentUser on mount");
     fetchCurrentUserCallback();
   }, [fetchCurrentUserCallback]);
 
   useEffect(() => {
-    // console.log("AuthContext: isLoading changed to", isLoading, "user is", user, "pathname is", pathname);
     if (!isLoading) {
-      if (!user && pathname !== '/login') { // Removed '/signup'
-        // console.log("AuthContext: Not loading, no user, not on login page. Redirecting to /login.");
+      if (!user && pathname !== '/login') {
         router.push('/login');
-      } else if (user && pathname === '/login') { // If user is somehow on login page, redirect
-        // console.log("AuthContext: User exists and on login page. Redirecting to /orders.");
+      } else if (user && pathname === '/login') {
         router.push('/orders');
       }
     }
   }, [user, isLoading, router, pathname]);
 
-
-  const handleLogin = async (formData: FormData): Promise<AuthActionState> => {
+  const handleLogin = async (email?: string, password?: string): Promise<{ success: boolean; message: string }> => {
     setIsLoading(true);
-    const result = await loginUser({}, formData); // prevState is empty object
-    
-    if (result.type === 'success' && result.user) {
-      setUser(result.user); // Set user immediately for quicker UI update
-      toast({ title: "Login Successful", description: result.message });
-      // No router.push here, useEffect above handles it after user state update
-    } else if (result.type === 'error') {
-      toast({ title: "Login Failed", description: result.message, variant: "destructive" });
+    // Client-side check for hardcoded credentials
+    if (email === 'manager@email.com' && password === 'password') {
+      const managerUser: User = {
+        id: 'manager-mock-id', // Mock ID
+        email: 'manager@email.com',
+        name: 'Default Manager',
+        role: 'manager',
+      };
+      setUser(managerUser);
+      localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(managerUser));
+      toast({ title: "Login Successful", description: "Welcome, Manager!" });
+      setIsLoading(false);
+      // router.push('/orders'); // Let useEffect handle redirection
+      return { success: true, message: "Login successful!" };
+    } else {
+      toast({ title: "Login Failed", description: "Invalid email or password.", variant: "destructive" });
+      setIsLoading(false);
+      return { success: false, message: "Invalid email or password." };
     }
-    setIsLoading(false);
-    return result;
   };
 
   const handleLogout = async () => {
     setIsLoading(true);
-    await logoutUser();
     setUser(null);
+    localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
+    try {
+        await serverLogoutUser(); // Attempt to clear server-side cookie as well
+    } catch (error) {
+        console.error("Error during server-side logout:", error);
+        // Continue with client-side logout even if server logout fails
+    }
     toast({ title: "Logged Out", description: "You have been successfully logged out." });
-    router.push('/login'); // Explicitly push to login after state update
-    setIsLoading(false); // Set loading false after navigation
+    router.push('/login');
+    setIsLoading(false);
   };
   
   return (

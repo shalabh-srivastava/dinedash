@@ -49,36 +49,30 @@ export interface PopularItemData {
 }
 
 // --- Auth Types ---
-export type UserRole = "manager"; // Only manager role for now
+export type UserRole = "manager";
 
 export interface User {
-  id: string;
+  id: string; // Can be a mock ID for client-side auth
   email: string;
   name: string;
   role: UserRole;
 }
 
-// This type is for the state managed by useActionState for login
-export type AuthActionState = {
+// This type is for the state managed by useActionState for server actions (e.g., feedback)
+export type ServerActionState = {
   type: 'success' | 'error' | '';
   message: string;
-  errors?: {
-    email?: string[];
-    password?: string[];
-    // name?: string[]; // Removed as signup is removed
-    general?: string[];
-  };
-  user?: User;
+  errors?: Record<string, string[] | undefined>;
+  user?: User; // Kept for server actions that might return user, but not primary for client auth context
 };
 
 
 export interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (formData: FormData) => Promise<AuthActionState>;
+  login: (email?: string, password?: string) => Promise<{ success: boolean; message: string }>; // Simplified login
   logout: () => Promise<void>;
-  // signup removed
-  fetchCurrentUser: () => Promise<void>;
+  fetchCurrentUser: () => Promise<void>; // Still useful for initial load from localStorage
 }
 
 // --- Feedback Types ---
