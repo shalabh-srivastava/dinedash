@@ -31,8 +31,8 @@ const managerNavItems: NavItem[] = [
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const [currentYear, setCurrentYear] = useState<number | null>(null);
-  const { user, isLoading, logout, fetchCurrentUser } = useAuth(); // Added fetchCurrentUser
-  const router = useRouter();
+  const { user, isLoading, logout, fetchCurrentUser } = useAuth();
+  const router = useRouter(); // Keep for logout if needed, but AuthContext handles most redirects
   const pathname = usePathname();
 
   useEffect(() => {
@@ -40,89 +40,72 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // This effect ensures that if AuthProvider hasn't finished loading the user,
-    // and we land directly on an app page (e.g. after a refresh),
-    // we try to fetch the current user status.
+    // If AuthProvider is loading and hasn't determined user, try to fetch.
+    // This is crucial if landing directly on an app page (e.g., after refresh or bookmark).
     if (isLoading && user === null) {
-        // console.log("AppLayout: isLoading true and user is null, calling fetchCurrentUser");
+        // console.log("AppLayout: Initial fetchCurrentUser due to isLoading and no user");
         fetchCurrentUser();
     }
   }, [isLoading, user, fetchCurrentUser]);
 
-
-  useEffect(() => {
-    // This effect handles redirection based on auth state
-    // console.log("AppLayout: Auth state check - isLoading:", isLoading, "user:", !!user, "pathname:", pathname);
-    if (!isLoading && !user && pathname !== '/login') { // signup page removed
-      // console.log("AppLayout: Redirecting to /login due to no user and not on login page");
-      router.push('/login');
-    }
-  }, [isLoading, user, router, pathname]);
-
+  // Primary guard: Show loading if auth state is being determined.
   if (isLoading) {
     return <div className="flex items-center justify-center min-h-screen">Loading Dashboard...</div>;
   }
   
-  // This case should ideally be covered by the useEffect above,
-  // but as a fallback, if somehow rendering occurs before redirection.
-  if (!user && pathname !== '/login') { 
-    return <div className="flex items-center justify-center min-h-screen">Redirecting to login...</div>;
-  }
-
-  // If user is null but we are on the login page, allow AuthProvider to render LoginPage
-  if (!user && pathname === '/login') {
-      return <>{children}</>; // LoginPage will be rendered by its own route
+  // If not loading and no user, AuthContext should have redirected to /login.
+  // This state implies we are on an authenticated route without a user, which is an issue.
+  // However, AuthProvider's useEffects are primarily responsible for redirection.
+  // This can serve as a fallback UI if redirection is somehow delayed.
+  if (!user) {
+    // console.log("AppLayout: No user and not loading. AuthContext should redirect. Showing fallback.");
+    return <div className="flex items-center justify-center min-h-screen">Access Denied. Redirecting to login...</div>;
   }
   
-  // If user exists, render the app layout
-  if (user) {
-    const navItems = user.role === 'manager' ? managerNavItems : baseNavItems;
+  // If user exists, render the app layout with sidebar and children
+  const navItemsToDisplay = user.role === 'manager' ? managerNavItems : baseNavItems;
 
-    return (
-      <SidebarProvider defaultOpen>
-        <Sidebar variant="sidebar" collapsible="icon">
-          <SidebarHeader className="p-4">
-            <div className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
-              <UtensilsCrossed className="h-7 w-7 text-primary" />
-              <span className="text-xl font-semibold group-data-[collapsible=icon]:hidden">
-                DineDash
-              </span>
-            </div>
-          </SidebarHeader>
-          <SidebarContent>
-            <SidebarNav navItems={navItems} />
-          </SidebarContent>
-          <SidebarFooter className="p-4 mt-auto">
-             <div className="text-xs text-muted-foreground group-data-[collapsible=icon]:hidden mb-2">
-              {user && (
-                <div className="flex items-center space-x-2 mb-2">
-                  <UserCircle className="h-5 w-5"/>
-                  <span>{user.name} ({user.role})</span>
-                </div>
-              )}
-              {currentYear !== null ? `© ${currentYear} DineDash RMS` : '© DineDash RMS'}
-            </div>
-            <Button variant="outline" size="sm" onClick={logout} className="w-full group-data-[collapsible=icon]:hidden">
-              <LogOut className="mr-2 h-4 w-4" /> Logout
-            </Button>
-             <Button variant="ghost" size="icon" onClick={logout} className="hidden group-data-[collapsible=icon]:flex justify-center w-full">
-              <LogOut className="h-5 w-5" />
-            </Button>
-          </SidebarFooter>
-        </Sidebar>
-        <SidebarInset className="min-h-screen">
-          <div className="p-4 md:p-6">
-              <div className="flex items-center justify-between md:justify-end mb-4">
-                   <SidebarTrigger className="md:hidden" />
-                   {/* User Profile / Settings can go here */}
-              </div>
-            {children}
+  return (
+    <SidebarProvider defaultOpen>
+      <Sidebar variant="sidebar" collapsible="icon">
+        <SidebarHeader className="p-4">
+          <div className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
+            <UtensilsCrossed className="h-7 w-7 text-primary" />
+            <span className="text-xl font-semibold group-data-[collapsible=icon]:hidden">
+              DineDash
+            </span>
           </div>
-        </SidebarInset>
-      </SidebarProvider>
-    );
-  }
-
-  // Fallback, should not be reached if logic above is correct
-  return <div className="flex items-center justify-center min-h-screen">Verifying session...</div>;
+        </SidebarHeader>
+        <SidebarContent>
+          <SidebarNav navItems={navItemsToDisplay} />
+        </SidebarContent>
+        <SidebarFooter className="p-4 mt-auto">
+            <div className="text-xs text-muted-foreground group-data-[collapsible=icon]:hidden mb-2">
+            {user && (
+              <div className="flex items-center space-x-2 mb-2">
+                <UserCircle className="h-5 w-5"/>
+                <span>{user.name} ({user.role})</span>
+              </div>
+            )}
+            {currentYear !== null ? `© ${currentYear} DineDash RMS` : '© DineDash RMS'}
+          </div>
+          <Button variant="outline" size="sm" onClick={logout} className="w-full group-data-[collapsible=icon]:hidden">
+            <LogOut className="mr-2 h-4 w-4" /> Logout
+          </Button>
+            <Button variant="ghost" size="icon" onClick={logout} className="hidden group-data-[collapsible=icon]:flex justify-center w-full">
+            <LogOut className="h-5 w-5" />
+          </Button>
+        </SidebarFooter>
+      </Sidebar>
+      <SidebarInset className="min-h-screen">
+        <div className="p-4 md:p-6">
+            <div className="flex items-center justify-between md:justify-end mb-4">
+                  <SidebarTrigger className="md:hidden" />
+                  {/* User Profile / Settings can go here */}
+            </div>
+          {children}
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
+  );
 }

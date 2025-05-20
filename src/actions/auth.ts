@@ -72,34 +72,50 @@ export async function getCurrentUser(): Promise<User | null> {
   const sessionCookie = cookies().get(SESSION_COOKIE_NAME);
   if (sessionCookie?.value) {
     try {
-      const user = JSON.parse(sessionCookie.value) as User;
-      // Optionally, re-validate user against DB here if needed for more security
-      // For instance, check if user still exists or role hasn't changed
+      const userFromCookie = JSON.parse(sessionCookie.value) as User;
+      
+      // Validate user against DB
       const db = await getDb();
-      const userRecord = await db.get('SELECT * FROM users WHERE id = ?', user.id);
-      if (!userRecord) {
-        console.warn("Session user not found in DB, clearing cookie.");
+      // Ensure user.id is treated as a number for the query if the DB column is INTEGER
+      const userIdAsNumber = Number(userFromCookie.id);
+      if (isNaN(userIdAsNumber)) {
+        console.error("Invalid user ID in cookie:", userFromCookie.id);
         cookies().delete(SESSION_COOKIE_NAME);
         return null;
       }
-      // Ensure the role in the cookie matches the DB role
-      if (userRecord.role !== user.role) {
-         console.warn("Session user role mismatch, updating cookie.");
-         const updatedUser = { ...user, role: userRecord.role as User['role'] };
-         cookies().set(SESSION_COOKIE_NAME, JSON.stringify(updatedUser), {
+
+      const userRecord = await db.get('SELECT * FROM users WHERE id = ?', userIdAsNumber);
+      
+      if (!userRecord) {
+        console.warn("Session user not found in DB (ID:", userIdAsNumber,"), clearing cookie.");
+        cookies().delete(SESSION_COOKIE_NAME);
+        return null;
+      }
+
+      // Ensure the role in the cookie matches the DB role and other critical fields if necessary
+      // For now, we trust the cookie if the user ID is valid and found.
+      // Reconstruct user from DB record to ensure data consistency, especially role.
+      const validatedUser: User = {
+        id: userRecord.id.toString(),
+        email: userRecord.email,
+        name: userRecord.name,
+        role: userRecord.role as User['role']
+      };
+
+      // If cookie data differs from DB (e.g. role), update cookie
+      if (userRecord.role !== userFromCookie.role || userRecord.name !== userFromCookie.name || userRecord.email !== userFromCookie.email) {
+         console.warn("Session user data mismatch with DB, updating cookie.");
+         cookies().set(SESSION_COOKIE_NAME, JSON.stringify(validatedUser), {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             maxAge: 60 * 60 * 24 * 7, 
             path: '/',
             sameSite: 'lax',
         });
-        return updatedUser;
       }
-
-      return user;
+      return validatedUser;
     } catch (error) {
-      console.error("Error parsing session cookie:", error);
-      // Clear potentially corrupted cookie
+      console.error("Error parsing or validating session cookie:", error);
       cookies().delete(SESSION_COOKIE_NAME);
       return null;
     }

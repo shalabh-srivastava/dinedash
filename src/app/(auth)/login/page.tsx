@@ -3,7 +3,6 @@
 
 import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-// import Link from "next/link"; // Removed Link as signup is removed
 import { loginUser } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,8 +23,12 @@ export default function LoginPage() {
 
 
   useEffect(() => {
+    // If user is already authenticated (e.g., due to existing session or after login)
+    // and AuthProvider is not loading, AuthProvider's useEffect should redirect from /login.
+    // This is a secondary check.
     if (!authLoading && user) {
-      router.push("/orders");
+      // console.log("LoginPage: User already authenticated, AuthProvider should redirect from /login.");
+      // router.push("/orders"); // AuthProvider should handle this.
     }
   }, [user, authLoading, router]);
 
@@ -35,10 +38,9 @@ export default function LoginPage() {
         title: "Login Successful",
         description: state.message || "Refreshing session...",
       });
-      fetchCurrentUser().then(() => {
-         // AuthProvider's useEffect will handle redirecting from /login to /orders
-         // after fetchCurrentUser updates the user state.
-      });
+      // After successful server action, prompt AuthContext to refresh current user state.
+      // AuthProvider's useEffect will then handle redirecting from /login to /orders.
+      fetchCurrentUser(); 
     } else if (state.type === 'error' && state.message) {
       toast({
         title: "Login Failed",
@@ -46,8 +48,10 @@ export default function LoginPage() {
         variant: "destructive",
       });
     }
-  }, [state, toast, fetchCurrentUser, router]);
+  }, [state, toast, fetchCurrentUser]); // Removed router from dependencies
 
+  // If AuthProvider is loading or if user is already authenticated, show loading.
+  // AuthProvider will handle redirection if user is already authenticated.
   if (authLoading || (!authLoading && user)) { 
     return <div className="flex items-center justify-center min-h-screen bg-background">Loading...</div>;
   }
@@ -76,18 +80,10 @@ export default function LoginPage() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full" disabled={isPending}>
+            <Button type="submit" className="w-full" disabled={isPending || authLoading}>
               {isPending ? <LogIn className="mr-2 h-4 w-4 animate-spin" /> : <LogIn className="mr-2 h-5 w-5" />}
               Log In
             </Button>
-            {/* Signup link removed
-            <p className="text-xs text-muted-foreground text-center">
-              Don&apos;t have an account?{" "}
-              <Link href="/signup" className="font-semibold text-primary hover:underline">
-                Sign Up
-              </Link>
-            </p>
-            */}
           </CardFooter>
         </form>
       </Card>
