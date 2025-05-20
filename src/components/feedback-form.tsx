@@ -3,7 +3,8 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState, useEffect } from "react"; // Changed import
+import { useFormStatus } from "react-dom";
 import { feedbackSchema, submitFeedback, type FeedbackFormData } from "@/actions/feedback";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +22,6 @@ import { Checkbox } from "@/components/ui/checkbox"; // For multi-select items
 import { mockMenuItems } from "@/lib/mock-data"; // To populate menu item selection
 import { useToast } from "@/hooks/use-toast";
 import { Send, Loader2 } from "lucide-react";
-import { useEffect } from "react";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -47,7 +47,8 @@ export function FeedbackForm() {
     },
   });
 
-  const [state, formAction] = useFormState(submitFeedback, { type: "", message: "", errors: {} });
+  // Changed useFormState to useActionState
+  const [state, formAction, isPending] = useActionState(submitFeedback, { type: "", message: "", errors: {} });
 
   useEffect(() => {
     if (state.type === 'success') {
@@ -58,22 +59,22 @@ export function FeedbackForm() {
     }
   }, [state, toast, form]);
 
-  // Watch menuItems to correctly pass to server action
-  const watchedMenuItems = form.watch("menuItems") || [];
-
   const handleSubmit = async () => {
     const formData = form.getValues();
-    // Manually call formAction with the correct data structure
-    // The formAction from useFormState expects FormData, but our server action is typed for FeedbackFormData
-    // To work around this, we construct the object and pass it directly
-    // This is a common pattern when useFormState is used with more complex, non-FormData submissions
-    // For simple form data, `new FormData(formRef.current)` is typical.
-    await formAction(formData);
+    // The useActionState hook now expects the action to be called directly,
+    // not through `formAction(formData)` when used with react-hook-form this way.
+    // Instead, the form's `action` prop or a direct call to `formAction` when submitting
+    // the form element itself is the intended pattern.
+    // For this setup where we manually call and pass structured data,
+    // we'll call `formAction` with the data.
+    // Note: The `isPending` from `useActionState` should be used to disable the submit button.
+    await (formAction as (payload: FeedbackFormData) => void)(formData);
   };
 
 
   return (
     <Form {...form}>
+      {/* We are not using the native form element's action here, but react-hook-form's onSubmit */}
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
         <FormField
           control={form.control}
@@ -187,7 +188,12 @@ export function FeedbackForm() {
         />
         
         <div className="flex justify-end">
-            <SubmitButton />
+            {/* The SubmitButton component uses useFormStatus, which is correct. 
+                The `isPending` from `useActionState` is used to disable this button. */}
+            <Button type="submit" disabled={isPending} className="w-full sm:w-auto">
+              {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+              Submit Feedback
+            </Button>
         </div>
       </form>
     </Form>

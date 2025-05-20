@@ -1,16 +1,16 @@
 
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState, useEffect } from "react"; // Changed import
+import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 import Link from "next/link";
 import { loginUser } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UtensilsCrossed, LogIn, UserPlus } from "lucide-react";
+import { UtensilsCrossed, LogIn } from "lucide-react"; // Removed UserPlus as it's not used here
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
 
@@ -30,7 +30,8 @@ export default function LoginPage() {
   const { user, isLoading: authLoading } = useAuth();
 
   const initialState = { message: '', type: '', errors: {} };
-  const [state, formAction] = useFormState(loginUser, initialState);
+  // Changed useFormState to useActionState
+  const [state, formAction, isPending] = useActionState(loginUser, initialState);
 
 
   useEffect(() => {
@@ -79,7 +80,10 @@ export default function LoginPage() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
-            <SubmitButton />
+            <Button type="submit" className="w-full" disabled={isPending}>
+              {isPending ? <LogIn className="mr-2 h-4 w-4 animate-spin" /> : <LogIn className="mr-2 h-5 w-5" />}
+              Log In
+            </Button>
             <p className="text-xs text-muted-foreground text-center">
               Don&apos;t have an account?{" "}
               <Link href="/signup" className="font-semibold text-primary hover:underline">

@@ -1,9 +1,9 @@
 
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState, useEffect } from "react"; // Changed import
+import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 import Link from "next/link";
 import { signupUser } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,8 @@ export default function SignupPage() {
   const { user, isLoading: authLoading } = useAuth();
 
   const initialState = { message: '', type: '', errors: {} };
-  const [state, formAction] = useFormState(signupUser, initialState);
+  // Changed useFormState to useActionState
+  const [state, formAction, isPending] = useActionState(signupUser, initialState);
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -84,7 +85,10 @@ export default function SignupPage() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
-            <SubmitButton />
+             <Button type="submit" className="w-full" disabled={isPending}>
+                {isPending ? <LogIn className="mr-2 h-4 w-4 animate-spin" /> : <UserPlus className="mr-2 h-5 w-5" />}
+                Sign Up
+            </Button>
              <p className="text-xs text-muted-foreground text-center">
               Already have an account?{" "}
               <Link href="/login" className="font-semibold text-primary hover:underline">
